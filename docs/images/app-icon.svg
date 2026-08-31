@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title">
+  <title id="title">拾账</title>
+  <path fill="#F6F2E8" d="M4 4h40v40H4z"/>
+  <path fill="#2C6E63" d="M11 9h5v30h-5z"/>
+  <path fill="#1E2A32" d="M21 12h17v3H21zM21 22h17v3H21zM21 32h12v3H21z"/>
+</svg>

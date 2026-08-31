@@ -1,0 +1,46 @@
+name: Bug 报告
+description: 报告可以稳定复现的问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: 请先移除截图、日志和附件中的账单、账号、域名及令牌。
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+      placeholder: 例如 0.1.2 或提交 SHA
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从一个明确的初始状态开始描述。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      description: Android 版本、设备型号，以及是否启用了私有云同步。
+    validations:
+      required: true

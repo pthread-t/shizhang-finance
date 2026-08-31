@@ -1,0 +1,9 @@
+.git
+.gradle
+.idea
+**/build
+*.jks
+*.keystore
+.env
+/data
+captures

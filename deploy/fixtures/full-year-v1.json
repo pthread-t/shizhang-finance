@@ -1,0 +1,41 @@
+{
+  "id": "full-year-v1",
+  "bookName": "家庭体验账本",
+  "accounts": [
+    { "key": "cash", "name": "现金", "type": "CASH", "openingBalanceMinor": 58600 },
+    { "key": "checking", "name": "工资卡", "type": "DEBIT_CARD", "openingBalanceMinor": 1268000 },
+    { "key": "wechat", "name": "微信钱包", "type": "E_WALLET", "openingBalanceMinor": 23560 },
+    { "key": "alipay", "name": "支付宝", "type": "E_WALLET", "openingBalanceMinor": 68900 },
+    { "key": "credit", "name": "信用卡", "type": "CREDIT_CARD", "openingBalanceMinor": -186500, "creditLimitMinor": 5000000, "statementDay": 12, "repaymentDay": 2 },
+    { "key": "savings", "name": "应急储蓄", "type": "SAVINGS", "openingBalanceMinor": 3500000 },
+    { "key": "usd", "name": "美元账户", "type": "SAVINGS", "currency": "USD", "openingBalanceMinor": 85000 },
+    { "key": "investment", "name": "指数基金", "type": "INVESTMENT", "openingBalanceMinor": 5260000 },
+    { "key": "loan", "name": "房贷", "type": "LOAN", "openingBalanceMinor": -8600000 },
+    { "key": "stored", "name": "公交卡", "type": "STORED_VALUE", "openingBalanceMinor": 12800 }
+  ],
+  "categories": [
+    { "key": "food", "name": "餐饮", "type": "EXPENSE" },
+    { "key": "breakfast", "name": "早餐", "type": "EXPENSE", "parent": "food" },
+    { "key": "lunch", "name": "午餐", "type": "EXPENSE", "parent": "food" },
+    { "key": "dinner", "name": "晚餐", "type": "EXPENSE", "parent": "food" },
+    { "key": "transport", "name": "交通", "type": "EXPENSE" },
+    { "key": "taxi", "name": "打车", "type": "EXPENSE", "parent": "transport" },
+    { "key": "public", "name": "公共交通", "type": "EXPENSE", "parent": "transport" },
+    { "key": "shopping", "name": "购物", "type": "EXPENSE" },
+    { "key": "grocery", "name": "日用品", "type": "EXPENSE", "parent": "shopping" },
+    { "key": "digital", "name": "数码", "type": "EXPENSE", "parent": "shopping" },
+    { "key": "housing", "name": "居住", "type": "EXPENSE" },
+    { "key": "rent", "name": "房租物业", "type": "EXPENSE", "parent": "housing" },
+    { "key": "medical", "name": "医疗", "type": "EXPENSE" },
+    { "key": "entertainment", "name": "娱乐", "type": "EXPENSE" },
+    { "key": "travel", "name": "旅行", "type": "EXPENSE" },
+    { "key": "other-expense", "name": "其他支出", "type": "EXPENSE" },
+    { "key": "salary", "name": "工资", "type": "INCOME" },
+    { "key": "bonus", "name": "奖金", "type": "INCOME" },
+    { "key": "freelance", "name": "兼职", "type": "INCOME" },
+    { "key": "investment-income", "name": "投资收益", "type": "INCOME" }
+  ],
+  "tags": ["必要支出", "工作", "家庭", "可选消费", "可抵扣"],
+  "merchants": ["北辰生鲜", "木棉咖啡", "青禾出行", "远山百货", "小满外卖", "中心门诊", "城市通信"],
+  "projects": ["日常生活", "上海出差", "暑期旅行", "新家布置"]
+}

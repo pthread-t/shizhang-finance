@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <style>
+    html,body,#chart{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:transparent}
+  </style>
+  <script src="echarts.min.js"></script>
+</head>
+<body>
+<div id="chart" role="img" aria-label="财务数据图表"></div>
+<script>
+  let chart;
+  let current;
+  const colors = ['#2F6FED','#0B8F84','#F06C67','#E49A2F','#8068D8','#D76596','#239DBB','#4F9854'];
+  const money = value => ((current && current.currency === 'CNY') ? '¥' : ((current && current.currency) ? current.currency+' ' : '')) + (Number(value) / 100).toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  function renderChart(payload, dark, height) {
+    current = JSON.parse(payload);
+    const chartElement = document.getElementById('chart');
+    chartElement.style.height = Math.max(180, Number(height) || 260) + 'px';
+    if (!chart) chart = echarts.init(chartElement, dark ? 'dark' : null, {renderer:'canvas', useCoarsePointer:true, pointerSize:44});
+    const textColor = dark ? '#F4F7FB' : '#172033';
+    const valueText = value => current.valueIsCount ? value+' 笔' : money(value);
+    const axis = {type:'value', axisLabel:{color:textColor, formatter:v => current.valueIsCount ? v : money(v)}, splitLine:{lineStyle:{color:dark?'#2B394D':'#E5EAF0'}}};
+    let option = {animation:true, animationDuration:220, color:colors, backgroundColor:'transparent', textStyle:{fontFamily:'sans-serif',color:textColor}, tooltip:{trigger:'axis',confine:true,valueFormatter:valueText}};
+    if (current.kind === 'LINE') {
+      option = Object.assign(option,{grid:{left:12,right:12,top:32,bottom:54,containLabel:true},xAxis:{type:'category',data:current.labels,axisLabel:{hideOverlap:true,color:textColor,formatter:v=>v.length>10?v.slice(0,10)+'…':v}},yAxis:axis,dataZoom:current.labels.length>8?[{type:'inside'},{type:'slider',height:18,bottom:4}]:[],series:current.series.map(s=>({name:s.name,type:'line',smooth:true,symbolSize:8,data:s.values}))});
+    } else if (current.kind === 'BAR') {
+      option = Object.assign(option,{grid:{left:12,right:current.labels.length>8?30:12,top:32,bottom:20,containLabel:true},xAxis:axis,yAxis:{type:'category',inverse:true,data:current.labels,axisLabel:{hideOverlap:true,color:textColor,width:96,overflow:'truncate'}},dataZoom:current.labels.length>8?[{type:'inside',yAxisIndex:0,startValue:0,endValue:7},{type:'slider',yAxisIndex:0,right:2,width:14,startValue:0,endValue:7}]:[],series:current.series.map(s=>({name:s.name,type:'bar',barMaxWidth:26,data:s.values}))});
+    } else if (current.kind === 'DONUT') {
+      option.tooltip.trigger='item';
+      option.series=[{name:current.series[0].name,type:'pie',radius:['48%','72%'],center:['50%','48%'],avoidLabelOverlap:true,label:{show:false},emphasis:{label:{show:true,formatter:'{b}\n{d}%'}},data:current.labels.map((name,i)=>({name,value:current.series[0].values[i]}))}];
+      option.legend={bottom:2,type:'scroll',textStyle:{color:textColor},formatter:name=>name.length>9?name.slice(0,9)+'…':name};
+    } else if (current.kind === 'HEATMAP') {
+      const values=current.heatmapCells.map(cell=>Number(cell.value));
+      const min=values.length?Math.min(...values):0;
+      const max=values.length?Math.max(...values):0;
+      option.tooltip={trigger:'item',confine:true,formatter:p=>current.labels[p.data[0]]+' · '+current.series[p.data[1]].name+'<br>'+valueText(p.data[2])};
+      option.grid={left:12,right:20,top:20,bottom:current.labels.length>8?56:24,containLabel:true};
+      option.xAxis={type:'category',data:current.labels,splitArea:{show:true},axisLabel:{hideOverlap:true,color:textColor,width:80,overflow:'truncate'}};
+      option.yAxis={type:'category',data:current.series.map(s=>s.name),splitArea:{show:true},axisLabel:{hideOverlap:true,color:textColor,width:88,overflow:'truncate'}};
+      option.dataZoom=[];
+      if(current.labels.length>8) option.dataZoom.push({type:'inside',xAxisIndex:0},{type:'slider',xAxisIndex:0,height:18,bottom:2});
+      if(current.series.length>8) option.dataZoom.push({type:'inside',yAxisIndex:0},{type:'slider',yAxisIndex:0,width:14,right:2});
+      option.visualMap={min:min,max:max,calculable:false,orient:'horizontal',left:'center',top:0,show:false,inRange:{color:dark?['#47252D','#FF8D96']:['#FFF0F1','#EB5A66']}};
+      option.series=[{type:'heatmap',data:current.heatmapCells.map(cell=>[cell.xIndex,cell.yIndex,cell.value,cell.pointId]),label:{show:current.heatmapCells.length<=20,formatter:p=>valueText(p.data[2])},emphasis:{itemStyle:{shadowBlur:8,shadowColor:'rgba(0,0,0,.35)'}}}];
+    }
+    chart.setOption(option,true);
+    chart.getZr().refreshImmediately();
+    if (window.BillChart && BillChart.postMessage) {
+      const snapshot = chart.getDataURL({type:'png',pixelRatio:2,backgroundColor:'transparent'});
+      BillChart.postMessage(JSON.stringify({snapshot:snapshot}));
+    }
+    chart.off('click');
+    chart.on('click', params => {
+      const pointId=current.kind === 'HEATMAP' ? params.data[3] : (current.points[params.dataIndex]||{}).pointId;
+      if(pointId && window.BillChart && BillChart.postMessage) BillChart.postMessage(JSON.stringify({pointId:pointId}));
+    });
+    chart.resize();
+  }
+  window.renderChart=renderChart;
+  new ResizeObserver(()=>{if(chart)chart.resize()}).observe(document.getElementById('chart'));
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+name: bill-record
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bill_record}
+      POSTGRES_USER: ${POSTGRES_USER:-bill_record}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PGDATA: /var/lib/postgresql/18/docker
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-bill_record}
+      DATABASE_USER: ${POSTGRES_USER:-bill_record}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?set a random JWT_SECRET of at least 32 characters in .env}
+      JWT_ISSUER: ${JWT_ISSUER:-bill-record}
+      ATTACHMENT_PATH: /data/attachments
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - attachments_data:/data/attachments
+    expose: ["8080"]
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge, backend]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  backup:
+    build: ./deploy/backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-bill_record}
+      POSTGRES_USER: ${POSTGRES_USER:-bill_record}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      BACKUP_PASSWORD: ${BACKUP_PASSWORD:?set BACKUP_PASSWORD in .env}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - attachments_data:/attachments:ro
+      - backup_data:/backups
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  restore:
+    profiles: ["tools"]
+    build: ./deploy/backup
+    entrypoint: ["/usr/local/bin/restore.sh"]
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-bill_record}
+      POSTGRES_USER: ${POSTGRES_USER:-bill_record}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      BACKUP_PASSWORD: ${BACKUP_PASSWORD:?set BACKUP_PASSWORD in .env}
+      TZ: ${TZ:-Asia/Shanghai}
+    volumes:
+      - attachments_data:/attachments
+      - backup_data:/backups:ro
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  edge:
+  backend:
+    internal: true
+
+volumes:
+  postgres_data:
+  attachments_data:
+  backup_data:
+  caddy_data:
+  caddy_config:

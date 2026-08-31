@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">拾账</string>
+    <string name="quick_record">快速记账</string>
+    <string name="accessibility_label">拾账支付识别</string>
+    <string name="accessibility_description">仅在你选择的微信和支付宝支付完成页面读取金额与商家，所有识别均在本机完成，不会执行点击或手势。</string>
+    <string name="widget_description">显示本月支出和预算余额</string>
+</resources>
+
